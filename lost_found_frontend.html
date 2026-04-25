@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lost & Found Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #252a36;
+    --accent: #ff6b35;
+    --accent2: #ffb347;
+    --green: #2ecc71;
+    --yellow: #f1c40f;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --card-shadow: 0 4px 32px rgba(0,0,0,0.5);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 70px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+  }
+  .logo h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
+  .header-stats {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .stat-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+  .stat-chip b { color: var(--accent); }
+
+  /* LAYOUT */
+  .app {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 70px);
+  }
+  /* SIDEBAR */
+  nav {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-label {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding: 0.8rem 1.5rem 0.3rem;
+    text-transform: uppercase;
+  }
+  nav button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 0.7rem 1.5rem;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  nav button:hover { color: var(--text); background: var(--surface2); }
+  nav button.active {
+    color: var(--accent);
+    background: rgba(255,107,53,0.08);
+    border-left-color: var(--accent);
+  }
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  /* MAIN CONTENT */
+  main { padding: 2rem; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    margin-bottom: 0.3rem;
+  }
+  .page-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+  /* DASHBOARD */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.missing::before { background: var(--red); }
+  .stat-card.found::before { background: var(--green); }
+  .stat-card.resolved::before { background: var(--blue); }
+  .stat-card.total::before { background: var(--accent); }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-card.missing .stat-num { color: var(--red); }
+  .stat-card.found .stat-num { color: var(--green); }
+  .stat-card.resolved .stat-num { color: var(--blue); }
+  .stat-card.total .stat-num { color: var(--accent); }
+  .stat-label { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-icon { position: absolute; right: 1rem; top: 1.2rem; font-size: 2rem; opacity: 0.15; }
+  .recent-title {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  /* CARDS / TABLE */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+  }
+  .card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .card-header h3 { font-size: 1rem; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+  }
+  td {
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge-missing { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+  .badge-found { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); }
+  .badge-resolved { background: rgba(52,152,219,0.15); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+  .badge-male { background: rgba(52,152,219,0.1); color: #3498db; }
+  .badge-female { background: rgba(255,107,53,0.1); color: var(--accent2); }
+
+  .id-cell { font-family: 'DM Mono', monospace; color: var(--muted); font-size: 0.8rem; }
+
+  /* BUTTONS */
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #e55a25; transform: translateY(-1px); }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+  .btn-danger:hover { background: rgba(231,76,60,0.25); }
+  .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+  .btn-success { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); }
+  .btn-success:hover { background: rgba(46,204,113,0.25); }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .form-group.full { grid-column: 1/-1; }
+  label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0.65rem 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+  }
+  input.error, select.error { border-color: var(--red); }
+  .error-msg { color: var(--red); font-size: 0.78rem; margin-top: 2px; display: none; }
+  .error-msg.show { display: block; }
+  select option { background: var(--surface2); }
+  .form-actions { display: flex; gap: 0.7rem; margin-top: 0.5rem; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* SEARCH */
+  .search-row {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-end;
+  }
+  .search-row .form-group { flex: 1; }
+
+  /* TOAST */
+  #toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    z-index: 999;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: var(--card-shadow);
+    animation: slide-in 0.25s ease;
+    max-width: 320px;
+  }
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.info { border-left: 3px solid var(--blue); }
+  @keyframes slide-in { from { transform: translateX(40px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+  /* ACTION BUTTONS in table */
+  .action-group { display: flex; gap: 0.4rem; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem;
+    width: 480px;
+    max-width: 95vw;
+    box-shadow: var(--card-shadow);
+  }
+  .modal h2 { font-family: 'Bebas Neue'; font-size: 1.6rem; letter-spacing: 1px; margin-bottom: 1.2rem; }
+  .modal-actions { display: flex; gap: 0.7rem; margin-top: 1.5rem; justify-content: flex-end; }
+
+  /* SEPARATOR */
+  .sep { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+  /* INFO ROWS */
+  .info-row { display: flex; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .info-item { display: flex; flex-direction: column; gap: 2px; }
+  .info-item .ilabel { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .info-item .ival { font-size: 0.9rem; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🔍</div>
+    <h1>LOST <span>&</span> FOUND</h1>
+  </div>
+  <div class="header-stats">
+    <div class="stat-chip">Total: <b id="h-total">0</b></div>
+    <div class="stat-chip">Missing: <b id="h-missing" style="color:var(--red)">0</b></div>
+    <div class="stat-chip">Found: <b id="h-found" style="color:var(--green)">0</b></div>
+  </div>
+</header>
+
+<div class="app">
+  <nav>
+    <div class="nav-label">Navigation</div>
+    <button class="active" onclick="showPage('dashboard',this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </button>
+    <button onclick="showPage('add',this)">
+      <span class="nav-icon">➕</span> Add Report
+    </button>
+    <button onclick="showPage('view',this)">
+      <span class="nav-icon">📋</span> View Reports
+    </button>
+    <button onclick="showPage('search',this)">
+      <span class="nav-icon">🔎</span> Search
+    </button>
+    <button onclick="showPage('update',this)">
+      <span class="nav-icon">✏️</span> Update Status
+    </button>
+    <div class="nav-label" style="margin-top:1rem">Info</div>
+    <button onclick="showPage('sql',this)">
+      <span class="nav-icon">🗄️</span> SQL Reference
+    </button>
+    <button onclick="showPage('arch',this)">
+      <span class="nav-icon">🏗️</span> Architecture
+    </button>
+  </nav>
+
+  <main>
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Overview of all missing person reports</div>
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">📁</div>
+          <div class="stat-num" id="d-total">0</div>
+          <div class="stat-label">Total Reports</div>
+        </div>
+        <div class="stat-card missing">
+          <div class="stat-icon">🔴</div>
+          <div class="stat-num" id="d-missing">0</div>
+          <div class="stat-label">Still Missing</div>
+        </div>
+        <div class="stat-card found">
+          <div class="stat-icon">🟢</div>
+          <div class="stat-num" id="d-found">0</div>
+          <div class="stat-label">Found</div>
+        </div>
+        <div class="stat-card resolved">
+          <div class="stat-icon">🔵</div>
+          <div class="stat-num" id="d-resolved">0</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Recent Reports</h3>
+          <button class="btn btn-primary btn-sm" onclick="showPage('add', document.querySelectorAll('nav button')[1])">+ Add New</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Name</th><th>Age</th><th>Gender</th>
+            <th>Last Seen</th><th>Status</th><th>Reported By</th>
+          </tr></thead>
+          <tbody id="dashboard-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADD REPORT -->
+    <div class="page" id="page-add">
+      <div class="page-title">Add New Report</div>
+      <div class="page-sub">Fill in the details to register a new missing person report</div>
+      <div class="card">
+        <div class="card-header"><h3>Missing Person Details</h3></div>
+        <div style="padding:1.5rem">
+          <div class="form-grid" id="add-form">
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input id="f-name" type="text" placeholder="e.g. Rahul Sharma"/>
+              <div class="error-msg" id="err-name">Name is required (min. 3 characters)</div>
+            </div>
+            <div class="form-group">
+              <label>Age *</label>
+              <input id="f-age" type="number" min="1" max="120" placeholder="e.g. 25"/>
+              <div class="error-msg" id="err-age">Age must be between 1 and 120</div>
+            </div>
+            <div class="form-group">
+              <label>Gender *</label>
+              <select id="f-gender">
+                <option value="">-- Select --</option>
+                <option>Male</option><option>Female</option><option>Other</option>
+              </select>
+              <div class="error-msg" id="err-gender">Please select gender</div>
+            </div>
+            <div class="form-group">
+              <label>Address *</label>
+              <input id="f-address" type="text" placeholder="e.g. Kothrud, Pune"/>
+              <div class="error-msg" id="err-address">Address is required</div>
+            </div>
+            <div class="form-group">
+              <label>Last Seen Location *</label>
+              <input id="f-location" type="text" placeholder="e.g. Nashik Railway Station"/>
+              <div class="error-msg" id="err-location">Location is required</div>
+            </div>
+            <div class="form-group">
+              <label>Last Seen Date *</label>
+              <input id="f-date" type="date"/>
+              <div class="error-msg" id="err-date">Please select a valid date</div>
+            </div>
+            <div class="form-group">
+              <label>Contact Number *</label>
+              <input id="f-contact" type="text" placeholder="e.g. 9876543210"/>
+              <div class="error-msg" id="err-contact">Enter valid 10-digit mobile number</div>
+            </div>
+            <div class="form-group">
+              <label>Reported By *</label>
+              <input id="f-reporter" type="text" placeholder="Reporter's full name"/>
+              <div class="error-msg" id="err-reporter">Reporter name required</div>
+            </div>
+            <div class="form-group">
+              <label>Relationship to Missing Person</label>
+              <select id="f-rel">
+                <option value="">-- Select --</option>
+                <option>Parent</option><option>Sibling</option><option>Spouse</option>
+                <option>Friend</option><option>Relative</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Description / Identification Marks</label>
+              <textarea id="f-desc" placeholder="Physical description, clothing worn, any identification marks..."></textarea>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:1.2rem">
+            <button class="btn btn-primary" onclick="addReport()">✅ Submit Report</button>
+            <button class="btn btn-ghost" onclick="clearAddForm()">🗑️ Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW REPORTS -->
+    <div class="page" id="page-view">
+      <div class="page-title">All Reports</div>
+      <div class="page-sub">Complete list of missing person reports</div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Reports Table</h3>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <select id="filter-status" onchange="renderViewTable()" style="font-size:0.8rem;padding:0.4rem 0.7rem">
+              <option value="">All Status</option>
+              <option>Missing</option><option>Found</option><option>Resolved</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Name</th><th>Age</th><th>Gender</th>
+            <th>Last Seen Location</th><th>Date</th><th>Status</th><th>Reporter</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="view-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="page" id="page-search">
+      <div class="page-title">Search Reports</div>
+      <div class="page-sub">Find a report by ID or name</div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div style="padding:1.5rem">
+          <div class="search-row">
+            <div class="form-group">
+              <label>Search By</label>
+              <select id="search-by">
+                <option value="id">Report ID</option>
+                <option value="name">Name</option>
+                <option value="location">Location</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:2">
+              <label>Search Query</label>
+              <input id="search-q" type="text" placeholder="Enter search term..." onkeydown="if(event.key==='Enter') doSearch()"/>
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="doSearch()" style="margin-bottom:2px">🔎 Search</button>
+            </div>
+            <div>
+              <button class="btn btn-ghost" onclick="clearSearch()" style="margin-bottom:2px">✖ Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Search Results</h3></div>
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Name</th><th>Age</th><th>Gender</th>
+            <th>Last Seen</th><th>Date</th><th>Status</th>
+          </tr></thead>
+          <tbody id="search-table">
+            <tr><td colspan="7"><div class="empty"><div class="empty-icon">🔍</div>Enter a search query above</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- UPDATE STATUS -->
+    <div class="page" id="page-update">
+      <div class="page-title">Update Status</div>
+      <div class="page-sub">Change the status of an existing report</div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div style="padding:1.5rem">
+          <div class="search-row">
+            <div class="form-group" style="flex:1">
+              <label>Report ID</label>
+              <input id="upd-id" type="text" placeholder="e.g. RPT001"/>
+            </div>
+            <div>
+              <button class="btn btn-ghost" onclick="findForUpdate()" style="margin-bottom:2px">🔍 Find</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="update-form-card" style="display:none">
+        <div class="card-header"><h3>Update Report</h3></div>
+        <div style="padding:1.5rem">
+          <div id="update-info" style="margin-bottom:1.2rem;padding:1rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>New Status</label>
+              <select id="upd-status">
+                <option>Missing</option>
+                <option>Found</option>
+                <option>Resolved</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Remarks (Optional)</label>
+              <input id="upd-remarks" type="text" placeholder="e.g. Found near Pune Bus Stand"/>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:1rem">
+            <button class="btn btn-primary" onclick="doUpdate()">✅ Update Status</button>
+            <button class="btn btn-ghost" onclick="cancelUpdate()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQL REFERENCE -->
+    <div class="page" id="page-sql">
+      <div class="page-title">SQL Reference</div>
+      <div class="page-sub">Stored procedures, functions, and triggers used by the live system</div>
+
+      <div class="card">
+        <div class="card-header"><h3>Core Tables</h3></div>
+        <div style="padding:1.5rem">
+          <pre style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-family:'DM Mono',monospace;font-size:0.82rem;color:#a8d8ea;overflow-x:auto;line-height:1.7">
+<span style="color:#f1c40f">CREATE TABLE</span> reports (
+  report_id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  age INT NOT NULL CHECK (age BETWEEN 1 AND 120),
+  gender VARCHAR(20) NOT NULL,
+  address VARCHAR(255) NOT NULL,
+  phone_no BIGINT NOT NULL,
+  report_date DATE NOT NULL,
+  location VARCHAR(150) NOT NULL,
+  description VARCHAR(500) NOT NULL,
+  status VARCHAR(30) DEFAULT 'Missing',
+  reporter_name VARCHAR(100) NOT NULL,
+  contact_no VARCHAR(15) NOT NULL,
+  relationship VARCHAR(50),
+  status_remarks VARCHAR(255)
+);
+
+<span style="color:#f1c40f">CREATE TABLE</span> report_status_history (...);
+<span style="color:#f1c40f">CREATE TABLE</span> report_audit_log (...);</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Frontend Actions</h3></div>
+        <div style="padding:1.5rem">
+          <pre style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-family:'DM Mono',monospace;font-size:0.82rem;color:#a8d8ea;overflow-x:auto;line-height:1.7">
+<span style="color:#2ecc71">-- Add report from frontend POST /api/reports</span>
+CALL sp_add_report('Aarav Sharma', 16, 'Male', 'Andheri West, Mumbai',
+  9876543210, '2026-04-10', 'Andheri Railway Station',
+  'Blue jeans and white shirt', 'Neha Sharma', '9876543210',
+  'Parent', 'Missing', @new_id);
+
+<span style="color:#2ecc71">-- Update status from frontend PUT /api/reports/{id}/status</span>
+CALL sp_update_report_status(@new_id, 'Found', 'Found near station help desk');
+
+<span style="color:#2ecc71">-- Delete from frontend DELETE /api/reports/{id}</span>
+CALL sp_delete_report(@new_id);</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Automatic Updates</h3></div>
+        <div style="padding:1.5rem">
+          <pre style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-family:'DM Mono',monospace;font-size:0.82rem;color:#a8d8ea;overflow-x:auto;line-height:1.7">
+<span style="color:#2ecc71">-- Function used by triggers</span>
+fn_normalize_status('found')  -- returns 'Found'
+
+<span style="color:#2ecc71">-- Trigger flow</span>
+trg_reports_before_insert  -> normalizes status and contact number
+trg_reports_after_insert   -> writes report_status_history and report_audit_log
+trg_reports_before_update  -> normalizes changed status and default remarks
+trg_reports_after_update   -> stores every status change automatically
+trg_reports_after_delete   -> keeps a delete audit record</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARCHITECTURE -->
+    <div class="page" id="page-arch">
+      <div class="page-title">System Architecture</div>
+      <div class="page-sub">How the system components connect</div>
+      <div class="card">
+        <div style="padding:2rem;text-align:center">
+          <div style="display:inline-flex;flex-direction:column;gap:0;align-items:center;max-width:500px;width:100%">
+            <div style="background:var(--surface2);border:2px solid var(--accent);border-radius:12px;padding:1rem 2.5rem;font-weight:600;font-size:1rem;width:260px">
+              👤 User (Browser)
+              <div style="font-size:0.78rem;color:var(--muted);font-weight:400;margin-top:4px">HTML / CSS / JavaScript</div>
+            </div>
+            <div style="width:2px;height:30px;background:var(--border);position:relative">
+              <span style="position:absolute;left:8px;top:8px;font-size:0.7rem;color:var(--muted);white-space:nowrap">HTTP Request</span>
+            </div>
+            <div style="background:var(--surface2);border:2px solid var(--blue);border-radius:12px;padding:1rem 2.5rem;font-weight:600;font-size:1rem;width:260px">
+              ☕ Java Backend
+              <div style="font-size:0.78rem;color:var(--muted);font-weight:400;margin-top:4px">Business Logic Layer</div>
+            </div>
+            <div style="width:2px;height:30px;background:var(--border);position:relative">
+              <span style="position:absolute;left:8px;top:8px;font-size:0.7rem;color:var(--muted);white-space:nowrap">JDBC API</span>
+            </div>
+            <div style="background:var(--surface2);border:2px solid var(--accent2);border-radius:12px;padding:1rem 2.5rem;font-weight:600;font-size:1rem;width:260px">
+              🔌 JDBC Driver
+              <div style="font-size:0.78rem;color:var(--muted);font-weight:400;margin-top:4px">mysql-connector-java</div>
+            </div>
+            <div style="width:2px;height:30px;background:var(--border);position:relative">
+              <span style="position:absolute;left:8px;top:8px;font-size:0.7rem;color:var(--muted);white-space:nowrap">SQL Queries</span>
+            </div>
+            <div style="background:var(--surface2);border:2px solid var(--green);border-radius:12px;padding:1rem 2.5rem;font-weight:600;font-size:1rem;width:260px">
+              🗄️ MySQL Database
+              <div style="font-size:0.78rem;color:var(--muted);font-weight:400;margin-top:4px">lost_found_db</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Java JDBC Code Sample</h3></div>
+        <div style="padding:1.5rem">
+          <pre style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1.2rem;font-family:'DM Mono',monospace;font-size:0.82rem;color:#a8d8ea;overflow-x:auto;line-height:1.7">
+<span style="color:#2ecc71">// 1. JDBC Connection</span>
+<span style="color:#f1c40f">public class</span> DBConnection {
+    <span style="color:#f1c40f">static final</span> String URL = <span style="color:#e74c3c">"jdbc:mysql://localhost:3306/lost_found_db"</span>;
+    <span style="color:#f1c40f">static final</span> String USER = <span style="color:#e74c3c">"root"</span>;
+    <span style="color:#f1c40f">static final</span> String PASS = <span style="color:#e74c3c">"your_password"</span>;
+
+    <span style="color:#f1c40f">public static</span> Connection getConnection() <span style="color:#f1c40f">throws</span> SQLException {
+        <span style="color:#f1c40f">return</span> DriverManager.getConnection(URL, USER, PASS);
+    }
+}
+
+<span style="color:#2ecc71">// 2. Insert Report</span>
+<span style="color:#f1c40f">public void</span> insertReport(String name, int age) {
+    String sql = <span style="color:#e74c3c">"{CALL sp_add_report(?, ?, ?, ..., ?)}"</span>;
+    <span style="color:#f1c40f">try</span> (Connection con = DBConnection.getConnection();
+         CallableStatement cs = con.prepareCall(sql)) {
+        cs.setString(1, name);
+        cs.setInt(2, age);
+        cs.execute();
+    } <span style="color:#f1c40f">catch</span> (SQLException e) { e.printStackTrace(); }
+}
+
+<span style="color:#2ecc71">// 3. Update Status</span>
+<span style="color:#f1c40f">public void</span> updateStatus(int id, String status) {
+    String sql = <span style="color:#e74c3c">"{CALL sp_update_report_status(?, ?, ?)}"</span>;
+    <span style="color:#f1c40f">try</span> (Connection con = DBConnection.getConnection();
+         CallableStatement cs = con.prepareCall(sql)) {
+        cs.setInt(1, id);
+        cs.setString(2, status);
+        cs.setString(3, "Updated from frontend");
+        cs.execute();
+    } <span style="color:#f1c40f">catch</span> (SQLException e) { e.printStackTrace(); }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="del-modal">
+  <div class="modal">
+    <h2>🗑️ DELETE REPORT</h2>
+    <p style="color:var(--muted);margin-bottom:1rem">Are you sure you want to delete report <b id="del-id-display"></b>? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete Report</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ── API DATA STORE ──────────────────────────────────────────────────────────
+const API_BASE = location.protocol === 'file:' ? 'http://localhost:8080/api' : '/api';
+let reports = [];
+let deleteTarget = null;
+let updateTarget = null;
+
+async function api(path, options={}) {
+  const res = await fetch(API_BASE + path, {
+    headers: {'Content-Type':'application/json'},
+    ...options
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if(!res.ok) throw new Error(data?.error || 'Request failed');
+  return data;
+}
+
+async function loadReports(showMessage=false) {
+  try {
+    reports = await api('/reports');
+    renderDashboard();
+    renderViewTable();
+    if(showMessage) toast('Reports refreshed from database', 'success');
+  } catch (err) {
+    toast('Backend connection failed: '+err.message, 'error');
+  }
+}
+
+function reportIdValue(id) {
+  const raw = String(id || '').trim().toUpperCase();
+  return raw.startsWith('RPT') ? raw.substring(3) : raw;
+}
+
+function formatId(id) {
+  return 'RPT' + String(id).padStart(3, '0');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id === 'dashboard') renderDashboard();
+  if(id === 'view') renderViewTable();
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────────
+function getStats() {
+  return {
+    total: reports.length,
+    missing: reports.filter(r=>r.status==='Missing').length,
+    found: reports.filter(r=>r.status==='Found').length,
+    resolved: reports.filter(r=>r.status==='Resolved').length,
+  };
+}
+function updateHeaderStats() {
+  const s = getStats();
+  document.getElementById('h-total').textContent = s.total;
+  document.getElementById('h-missing').textContent = s.missing;
+  document.getElementById('h-found').textContent = s.found;
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const s = getStats();
+  document.getElementById('d-total').textContent = s.total;
+  document.getElementById('d-missing').textContent = s.missing;
+  document.getElementById('d-found').textContent = s.found;
+  document.getElementById('d-resolved').textContent = s.resolved;
+  const tbody = document.getElementById('dashboard-table');
+  const recent = [...reports].reverse().slice(0,5);
+  tbody.innerHTML = recent.length ? recent.map(r => `
+    <tr>
+      <td class="id-cell">${formatId(r.id)}</td>
+      <td><b>${r.name}</b></td>
+      <td>${r.age}</td>
+      <td><span class="badge badge-${r.gender.toLowerCase()}">${r.gender}</span></td>
+      <td>${r.location}</td>
+      <td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td>
+      <td>${r.reporter}</td>
+    </tr>`).join('') : emptyRow(7);
+  updateHeaderStats();
+}
+
+// ── ADD REPORT ────────────────────────────────────────────────────────────────
+function validate(id, condition, errId) {
+  const el = document.getElementById(id);
+  const err = document.getElementById(errId);
+  if(!condition) { el.classList.add('error'); err.classList.add('show'); return false; }
+  el.classList.remove('error'); err.classList.remove('show'); return true;
+}
+async function addReport() {
+  const name = document.getElementById('f-name').value.trim();
+  const age = parseInt(document.getElementById('f-age').value);
+  const gender = document.getElementById('f-gender').value;
+  const address = document.getElementById('f-address').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+  const date = document.getElementById('f-date').value;
+  const contact = document.getElementById('f-contact').value.trim();
+  const reporter = document.getElementById('f-reporter').value.trim();
+  const relationship = document.getElementById('f-rel').value;
+  const description = document.getElementById('f-desc').value.trim();
+  let ok = true;
+  ok = validate('f-name', name.length>=3, 'err-name') && ok;
+  ok = validate('f-age', !isNaN(age) && age>=1 && age<=120, 'err-age') && ok;
+  ok = validate('f-gender', gender!=='', 'err-gender') && ok;
+  ok = validate('f-address', address.length>0, 'err-address') && ok;
+  ok = validate('f-location', location.length>0, 'err-location') && ok;
+  ok = validate('f-date', date!=='', 'err-date') && ok;
+  ok = validate('f-contact', /^[0-9]{10}$/.test(contact), 'err-contact') && ok;
+  ok = validate('f-reporter', reporter.length>=2, 'err-reporter') && ok;
+  if(!ok) return;
+  try {
+    const created = await api('/reports', {
+      method: 'POST',
+      body: JSON.stringify({
+        name, age, gender, address, location, date,
+        phoneNo: contact,
+        contact, reporter, relationship, description
+      })
+    });
+    toast('✅ Report '+formatId(created.id)+' added successfully!', 'success');
+    clearAddForm();
+    await loadReports();
+  } catch (err) {
+    toast('Could not save report: '+err.message, 'error');
+  }
+}
+function clearAddForm() {
+  ['f-name','f-age','f-address','f-location','f-date','f-contact','f-reporter','f-desc'].forEach(id => document.getElementById(id).value='');
+  ['f-gender','f-rel'].forEach(id => document.getElementById(id).selectedIndex=0);
+  ['err-name','err-age','err-gender','err-address','err-location','err-date','err-contact','err-reporter'].forEach(id => {
+    document.getElementById(id).classList.remove('show');
+  });
+  ['f-name','f-age','f-gender','f-address','f-location','f-date','f-contact','f-reporter'].forEach(id => document.getElementById(id).classList.remove('error'));
+}
+
+// ── VIEW TABLE ────────────────────────────────────────────────────────────────
+function renderViewTable() {
+  const filter = document.getElementById('filter-status').value;
+  const data = filter ? reports.filter(r=>r.status===filter) : reports;
+  const tbody = document.getElementById('view-table');
+  tbody.innerHTML = data.length ? data.map(r => `
+    <tr>
+      <td class="id-cell">${formatId(r.id)}</td>
+      <td><b>${r.name}</b></td>
+      <td>${r.age}</td>
+      <td><span class="badge badge-${r.gender==='Male'?'male':'female'}">${r.gender}</span></td>
+      <td>${r.location}</td>
+      <td style="font-size:0.82rem;color:var(--muted)">${r.date}</td>
+      <td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td>
+      <td>${r.reporter}</td>
+      <td>
+        <div class="action-group">
+          <button class="btn btn-sm btn-success" onclick='quickStatusUpdate("${r.id}")'>✏️</button>
+          <button class="btn btn-sm btn-danger" onclick='openDelete("${r.id}")'>🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('') : `<tr><td colspan="9">${emptyHTML('No reports found')}</td></tr>`;
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+function doSearch() {
+  const by = document.getElementById('search-by').value;
+  const q = document.getElementById('search-q').value.trim().toLowerCase();
+  if(!q) { toast('Please enter a search query', 'info'); return; }
+  const results = reports.filter(r => {
+    if(by==='id') return formatId(r.id).toLowerCase().includes(q) || String(r.id).includes(q);
+    if(by==='name') return r.name.toLowerCase().includes(q);
+    if(by==='location') return r.location.toLowerCase().includes(q);
+    return false;
+  });
+  const tbody = document.getElementById('search-table');
+  tbody.innerHTML = results.length ? results.map(r => `
+    <tr>
+      <td class="id-cell">${formatId(r.id)}</td>
+      <td><b>${r.name}</b></td>
+      <td>${r.age}</td>
+      <td>${r.gender}</td>
+      <td>${r.location}</td>
+      <td>${r.date}</td>
+      <td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td>
+    </tr>`).join('') : `<tr><td colspan="7">${emptyHTML('No results found for "'+q+'"')}</td></tr>`;
+}
+function clearSearch() {
+  document.getElementById('search-q').value = '';
+  document.getElementById('search-table').innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🔍</div>Enter a search query above</div></td></tr>`;
+}
+
+// ── UPDATE STATUS ─────────────────────────────────────────────────────────────
+function findForUpdate() {
+  const id = reportIdValue(document.getElementById('upd-id').value);
+  const r = reports.find(x => String(x.id) === id);
+  if(!r) { toast('Report not found: '+id, 'error'); return; }
+  updateTarget = r.id;
+  document.getElementById('update-form-card').style.display = 'block';
+  document.getElementById('update-info').innerHTML = `
+    <div class="info-row">
+      <div class="info-item"><div class="ilabel">Report ID</div><div class="ival" style="font-family:'DM Mono',monospace">${formatId(r.id)}</div></div>
+      <div class="info-item"><div class="ilabel">Name</div><div class="ival">${r.name}</div></div>
+      <div class="info-item"><div class="ilabel">Age</div><div class="ival">${r.age}</div></div>
+      <div class="info-item"><div class="ilabel">Current Status</div><div class="ival"><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></div></div>
+    </div>`;
+  document.getElementById('upd-status').value = r.status;
+}
+async function doUpdate() {
+  if(!updateTarget) return;
+  const newStatus = document.getElementById('upd-status').value;
+  const remarks = document.getElementById('upd-remarks').value.trim();
+  try {
+    const updated = await api('/reports/'+updateTarget+'/status', {
+      method: 'PUT',
+      body: JSON.stringify({status: newStatus, remarks})
+    });
+    toast('✅ Status updated to "'+updated.status+'" for '+updated.name, 'success');
+    cancelUpdate();
+    await loadReports();
+  } catch (err) {
+    toast('Could not update status: '+err.message, 'error');
+  }
+}
+function cancelUpdate() {
+  updateTarget = null;
+  document.getElementById('update-form-card').style.display = 'none';
+  document.getElementById('upd-id').value = '';
+  document.getElementById('upd-remarks').value = '';
+}
+function quickStatusUpdate(id) {
+  document.getElementById('upd-id').value = formatId(id);
+  showPage('update', document.querySelectorAll('nav button')[4]);
+  findForUpdate();
+}
+
+// ── DELETE ─────────────────────────────────────────────────────────────────────
+function openDelete(id) {
+  deleteTarget = id;
+  document.getElementById('del-id-display').textContent = formatId(id);
+  document.getElementById('del-modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('del-modal').classList.remove('show');
+  deleteTarget = null;
+}
+async function confirmDelete() {
+  try {
+    await api('/reports/'+deleteTarget, {method:'DELETE'});
+    toast('🗑️ Report '+formatId(deleteTarget)+' deleted', 'error');
+    closeModal();
+    await loadReports();
+  } catch (err) {
+    toast('Could not delete report: '+err.message, 'error');
+  }
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function emptyHTML(msg) {
+  return `<div class="empty"><div class="empty-icon">📭</div>${msg}</div>`;
+}
+function emptyRow(cols) {
+  return `<tr><td colspan="${cols}">${emptyHTML('No reports yet')}</td></tr>`;
+}
+function toast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icon = {success:'✅', error:'❌', info:'ℹ️'}[type] || 'ℹ️';
+  t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadReports();
+</script>
+</body>
+</html>
